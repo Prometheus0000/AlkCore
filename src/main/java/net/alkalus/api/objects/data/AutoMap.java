@@ -3,7 +3,9 @@ package net.alkalus.api.objects.data;
 import java.io.Serializable;
 import java.util.*;
 
-public class AutoMap<V> implements Iterable<V>, Cloneable, Serializable, Collection<V>, Queue<V> {
+import net.alkalus.api.objects.misc.GenericException;
+
+public class AutoMap<V> implements Iterable<V>, Cloneable, Serializable, Collection<V>, Queue<V>, List<V>{
 
 	/**
 	 * The Internal Map
@@ -26,6 +28,10 @@ public class AutoMap<V> implements Iterable<V>, Cloneable, Serializable, Collect
 		mInternalMap = defaultMapType;
 		mInternalNameMap = new LinkedHashMap<String, Integer>();
 	}
+
+	public synchronized final Map<Integer, V> getAsMap() {
+		return mInternalMap;
+	}	
 	
 	@Override
 	public Iterator<V> iterator() {		
@@ -110,7 +116,6 @@ public class AutoMap<V> implements Iterable<V>, Cloneable, Serializable, Collect
 	}	
 	
 	public synchronized final boolean remove(Object value) {
-		value.getClass();
 		if (this.mInternalMap.containsValue(value)) {
 			return this.mInternalMap.remove(mInternalNameMap.get(""+value.hashCode()), value);
 		}
@@ -210,6 +215,91 @@ public class AutoMap<V> implements Iterable<V>, Cloneable, Serializable, Collect
 	@Override
 	public V peek() {
 		return element();
+	}	
+
+	@Override
+	public boolean addAll(int index, Collection<? extends V> c) {
+		return addAll(c);
+	}
+
+	@Override
+	public V set(int index, V element) {
+		return set(element);
+	}
+
+	@Override
+	public void add(int index, V element) {
+		add(element);
+	}
+
+	@Override
+	public V remove(int index) {
+		V aIndexedItem = mInternalMap.get(index);
+		if (aIndexedItem == null) {
+			return null;
+		}
+		else {
+			if (remove(aIndexedItem)){
+				return aIndexedItem;
+			}
+			else {
+				return null;
+			}
+		}	
+	}
+
+	@Override
+	public int indexOf(Object o) {
+		int aIndex = 0;		
+		for (@SuppressWarnings("unused")
+		int y = 0; aIndex < mInternalMap.size(); aIndex++) {
+			if (o.equals(mInternalMap.get(aIndex))) {
+				return aIndex;
+			}
+		}		
+		return -1;
+	}
+
+	@Override
+	public int lastIndexOf(Object o) {
+		return indexOf(o);
+	}
+
+	@Override
+	public ListIterator<V> listIterator() {
+		/*ArrayList<V> aInternalList = new ArrayList<V>();	
+		for (V h : values()) {
+			aInternalList.add(h);
+		}
+		return aInternalList.listIterator();*/
+		
+		
+		
+		new GenericException("LIST ITERATOR ON AUTOMAP - NULL IMPLEMENTATION");		
+	    return null;
+	}
+
+	@Override
+	public ListIterator<V> listIterator(int index) {
+		/*ArrayList<V> aInternalList = new ArrayList<V>();	
+		for (V h : values()) {
+			aInternalList.add(h);
+		}
+		return aInternalList.listIterator(index);*/
+		// TODO Auto-generated method stub
+		new GenericException("LIST ITERATOR ON AUTOMAP - NULL IMPLEMENTATION");		
+		return null;
+	}
+
+	@Override
+	public List<V> subList(int fromIndex, final int toIndex) {		
+		ArrayList<V> aData = new ArrayList<V>();
+		int aCount = fromIndex;
+		while (aCount < toIndex) {
+			aData.add(mInternalMap.get(aCount));
+			aCount++;
+		}
+		return aData;
 	}
   
 }

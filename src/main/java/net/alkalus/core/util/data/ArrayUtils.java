@@ -3,8 +3,13 @@ package net.alkalus.core.util.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import net.alkalus.api.objects.data.AutoMap;
@@ -78,6 +83,36 @@ public class ArrayUtils {
 			t.printStackTrace();
 			return null;
 		}
+	}
+	
+	/*
+	 * Java method to sort Map in Java by value e.g. HashMap or Hashtable
+	 * throw NullPointerException if Map contains null values
+	 * It also sort values even if they are duplicates
+	 * https://stackoverflow.com/a/18003532
+	 * Read more: http://javarevisited.blogspot.com/2012/12/how-to-sort-hashmap-java-by-key-and-value.html#ixzz2akXStsGj
+	 */
+	public static <K extends Comparable,V extends Comparable> Map<K,V> sortMapByValues(Map<K,V> map){
+	    List<Map.Entry<K,V>> entries = new LinkedList<Map.Entry<K,V>>(map.entrySet());
+
+	    Collections.sort(entries, new Comparator<Map.Entry<K,V>>() {
+
+	        @Override
+	        public int compare(Entry<K, V> o1, Entry<K, V> o2) {
+	            return o1.getValue().compareTo(o2.getValue());
+	            // to compare alphabetically case insensitive return this instead
+	            // o1.getValue().toString().compareToIgnoreCase(o2.getValue().toString()); 
+	        }
+	    });
+
+	    //LinkedHashMap will keep the keys in the order they are inserted
+	    //which is currently sorted on natural ordering
+	    Map<K,V> sortedMap = new LinkedHashMap<K,V>();
+
+	    for(Map.Entry<K,V> entry: entries){
+	        sortedMap.put(entry.getKey(), entry.getValue());
+	    }
+	    return sortedMap;
 	}
 
 }

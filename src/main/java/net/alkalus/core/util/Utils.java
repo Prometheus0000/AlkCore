@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
@@ -431,8 +432,11 @@ public class Utils {
 		}
 	}
 
-	public static String getMcDir() {
-		return "";
+	public static String getCurrentTimeAndDate() {
+		long yourmilliseconds = System.currentTimeMillis();
+		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");    
+		Date resultdate = new Date(yourmilliseconds);
+		return sdf.format(resultdate);
 	}
 
 }

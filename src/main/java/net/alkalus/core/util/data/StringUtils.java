@@ -1,5 +1,7 @@
 package net.alkalus.core.util.data;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 public class StringUtils {
 
 	public static String superscript(String str) {
@@ -115,5 +117,13 @@ public class StringUtils {
 		String firstLetter = data.substring(0,1).toUpperCase();
 		String restLetters = data.substring(1).toLowerCase();
 		return firstLetter + restLetters;
+	}
+	
+	public static String escape(char aChar) {
+		return escape(""+aChar);
+	}
+
+	public static String escape(String string) {
+		return StringEscapeUtils.escapeJava(string);
 	}
 }
