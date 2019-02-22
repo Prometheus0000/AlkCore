@@ -17,6 +17,7 @@ import org.apache.commons.lang3.EnumUtils;
 
 import net.alkalus.api.objects.data.AutoMap;
 import net.alkalus.api.objects.misc.AcLog;
+import net.alkalus.core.locale.LocaleCache;
 import net.alkalus.core.util.math.MathUtils;
 import net.alkalus.core.util.sys.SystemUtils;
 
@@ -438,5 +439,13 @@ public class Utils {
 		Date resultdate = new Date(yourmilliseconds);
 		return sdf.format(resultdate);
 	}
+	
+	/*public static AutoMap<File> getAllResourcesOnClassPath(){
+		File file;
+
+		//file = new File(LocaleCache.class.getResource("locale/"+g+".lang").getFile());
+		
+		
+	}*/
 
 }

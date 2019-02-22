@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Optional;
 
 import net.alkalus.api.objects.data.AutoMap;
 import net.alkalus.api.objects.misc.AcLog;
@@ -190,4 +191,15 @@ public class FileUtils {
 			return new AutoMap<String>();
 		}
 	}
+
+
+	public static String getFileExtension(File aFile) {
+		return getFileExtension(aFile.getAbsolutePath());
+	}
+	
+	public static String getFileExtension(String aAbsolutePathOfFile) {
+		Optional<String> a = Optional.ofNullable(aAbsolutePathOfFile).filter(f -> f.contains(".")).map(f -> f.substring(aAbsolutePathOfFile.lastIndexOf(".") + 1));
+		return a.get();
+	}
+	
 }

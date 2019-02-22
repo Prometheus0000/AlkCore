@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -92,7 +93,7 @@ public class ArrayUtils {
 	 * https://stackoverflow.com/a/18003532
 	 * Read more: http://javarevisited.blogspot.com/2012/12/how-to-sort-hashmap-java-by-key-and-value.html#ixzz2akXStsGj
 	 */
-	public static <K extends Comparable,V extends Comparable> Map<K,V> sortMapByValues(Map<K,V> map){
+	public static <K extends Comparable,V extends Comparable> Map<K, V> sortMapByValues(Map<K,V> map){
 	    List<Map.Entry<K,V>> entries = new LinkedList<Map.Entry<K,V>>(map.entrySet());
 
 	    Collections.sort(entries, new Comparator<Map.Entry<K,V>>() {

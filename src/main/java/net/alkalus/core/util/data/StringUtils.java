@@ -4,6 +4,12 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 public class StringUtils {
 
+	public static String linebreak = linebreak() ;
+	
+	public static String linebreak() {
+		return System.getProperty("line.separator");
+	}
+
 	public static String superscript(String str) {
 		str = str.replaceAll("0", "\u2070");
 		str = str.replaceAll("1", "\u00B9");
