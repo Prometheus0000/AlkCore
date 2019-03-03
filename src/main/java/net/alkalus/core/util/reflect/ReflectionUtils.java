@@ -1,7 +1,6 @@
 package net.alkalus.core.util.reflect;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,28 +9,76 @@ import java.lang.reflect.Modifier;
 import com.google.common.reflect.ClassPath;
 
 import net.alkalus.api.objects.misc.AcLog;
-import net.alkalus.core.lib.CORE;
+import net.alkalus.api.objects.misc.ReflectionCache;
 
 public class ReflectionUtils {
 
-	public static Field getField(final Class<?> clazz, final String fieldName) throws NoSuchFieldException {
-		try {
-			Field k = clazz.getDeclaredField(fieldName);
-			makeAccessible(k);
-			//Logger.WARNING("Got Field from Class. "+fieldName+" did exist within "+clazz.getCanonicalName()+".");
-			return k;
-		} catch (final NoSuchFieldException e) {
-			final Class<?> superClass = clazz.getSuperclass();
-			if (superClass == null) {
-				//Logger.WARNING("Failed to get Field from Class. "+fieldName+" does not existing within "+clazz.getCanonicalName()+".");
-				throw e;
-			}
-			//Logger.WARNING("Failed to get Field from Class. "+fieldName+" does not existing within "+clazz.getCanonicalName()+". Trying super class.");
-			return getField(superClass, fieldName);
-		}
+	private static ReflectionCache mReflectionCache = new ReflectionCache();
+
+
+	/**
+	 * Returns a cached {@link Class} object.
+	 * @param aClassCanonicalName - The canonical name of the underlying class.
+	 * @return - Valid, {@link Class} object, or {@link null}.
+	 */
+	public static Class getClass(String aClassCanonicalName) {
+		return mReflectionCache.getClass(aClassCanonicalName);
 	}
 
-	public static void makeAccessible(final Field field) {
+	/**
+	 * Returns a cached {@link Method} object. Wraps {@link #getMethod(Class, String, Class...)}.
+	 * @param aObject - Object containing the Method.
+	 * @param aMethodName - Method's name in {@link String} form.
+	 * @param aTypes - Class Array of Types for {@link Method}'s constructor.
+	 * @return - Valid, non-final, {@link Method} object, or {@link null}.
+	 */
+	public static Method getMethod(Object aObject, String aMethodName, Class[] aTypes) {
+		return mReflectionCache.getMethod(aObject, aMethodName, aTypes);
+	}
+		
+	/**
+	 * Returns a cached {@link Method} object.
+	 * @param aClass - Class containing the Method.
+	 * @param aMethodName - Method's name in {@link String} form.
+	 * @param aTypes - Varags Class Types for {@link Method}'s constructor.
+	 * @return - Valid, non-final, {@link Method} object, or {@link null}.
+	 */
+	public static Method getMethod(Class aClass, String aMethodName, Class... aTypes) {
+		return mReflectionCache.getMethod(aClass, aMethodName, aTypes);
+	}
+
+	/**
+	 * Returns a cached {@link Field} object.
+	 * @param aClass - Class containing the Method.
+	 * @param aFieldName - Field name in {@link String} form.
+	 * @return - Valid, non-final, {@link Field} object, or {@link null}.
+	 */
+	public static Field getField(final Class aClass, final String aFieldName) {
+		return mReflectionCache.getField(aClass, aFieldName);
+	}
+	
+	/**
+	 * Returns a cached {@link Field} object.
+	 * @param aInstance - {@link Object} to get the field instance from.
+	 * @param aFieldName - Field name in {@link String} form.
+	 * @return - Valid, non-final, {@link Field} object, or {@link null}.
+	 */
+	public static <T> T getField(final Object aInstance, final String aFieldName) {
+		return mReflectionCache.getField(aInstance, aFieldName);
+	}
+
+
+
+
+	/*
+	 * Utility Functions
+	 */
+
+	public static boolean doesClassExist(final String classname) {
+		return mReflectionCache.isClassPresent(classname);
+	}
+
+	public static void makeFieldAccessible(final Field field) {
 		if (!Modifier.isPublic(field.getModifiers()) ||
 				!Modifier.isPublic(field.getDeclaringClass().getModifiers()))
 		{
@@ -39,25 +86,51 @@ public class ReflectionUtils {
 		}
 	}
 
-	//Some Reflection utils - http://stackoverflow.com/questions/14374878/using-reflection-to-set-an-object-property
-	@SuppressWarnings("unchecked")
-	public static <V> V getField(final Object object, final String fieldName) {
-		Class<?> clazz = object.getClass();
-		while (clazz != null) {
-			try {
-				final Field field = clazz.getDeclaredField(fieldName);
-				field.setAccessible(true);
-				return (V) field.get(object);
-			} catch (final NoSuchFieldException e) {
-				AcLog.WARNING("getField("+object.toString()+", "+fieldName+") failed.");
-				clazz = clazz.getSuperclass();
-			} catch (final Exception e) {
-				AcLog.WARNING("getField("+object.toString()+", "+fieldName+") failed.");
-				throw new IllegalStateException(e);
-			}
+	public static void makeMethodAccessible(final Method method) {
+		if (!Modifier.isPublic(method.getModifiers()) ||
+				!Modifier.isPublic(method.getDeclaringClass().getModifiers()))
+		{
+			method.setAccessible(true);
 		}
-		return null;
 	}
+
+	/**
+	 * Get the method name for a depth in call stack. <br />
+	 * Utility function
+	 * @param depth depth in the call stack (0 means current method, 1 means call method, ...)
+	 * @return Method name
+	 */
+	public static String getMethodName(final int depth) {
+		final StackTraceElement[] ste = new Throwable().getStackTrace();
+		//System. out.println(ste[ste.length-depth].getClassName()+"#"+ste[ste.length-depth].getMethodName());
+		return ste[depth+1].getMethodName();
+	}
+
+
+	/**
+	 * 
+	 * @param aPackageName - The full {@link Package} name in {@link String} form. 
+	 * @return - {@link Boolean} object. True if loaded > 0 classes.
+	 */
+	public static boolean dynamicallyLoadClassesInPackage(String aPackageName) {
+		ClassLoader classLoader = ReflectionUtils.class.getClassLoader();
+		int loaded = 0;
+		try {
+			ClassPath path = ClassPath.from(classLoader);
+			for (ClassPath.ClassInfo info : path.getTopLevelClassesRecursive(aPackageName)) {
+				Class<?> clazz = Class.forName(info.getName(), true, classLoader);
+				if (clazz != null) {
+					loaded++;
+					AcLog.WARNING("Found "+clazz.getCanonicalName()+". ["+loaded+"]");
+				}
+			}
+		} catch (ClassNotFoundException | IOException e) {
+
+		}
+
+		return loaded > 0;
+	}
+	
 
 	public static boolean setField(final Object object, final String fieldName, final Object fieldValue) {
 		Class<?> clazz = object.getClass();
@@ -65,7 +138,13 @@ public class ReflectionUtils {
 			try {
 				final Field field = getField(clazz, fieldName);
 				if (field != null) {
-					setValue(object, field, fieldValue);					
+					//Handle Static Fields
+					if (Modifier.isStatic(field.getModifiers())) {
+						ReflectionUtils.setFieldValue_Internal(null, field, fieldValue);						
+					}
+					else {
+						ReflectionUtils.setFieldValue_Internal(object, field, fieldValue);
+					}									
 					return true;
 				}
 			} catch (final NoSuchFieldException e) {
@@ -79,68 +158,16 @@ public class ReflectionUtils {
 		return false;
 	}
 
-	public static boolean doesClassExist(final String classname) {
-		boolean exists = true;
-		try {
-			// Load any class that should be present if driver's available
-			Class.forName(classname);
-		} catch (final ClassNotFoundException e) {
-			// Driver is not available
-			exists = false;
-		}
-		return exists;
-	}
-
-	/**
-	 * Get the method name for a depth in call stack. <br />
-	 * Utility function
-	 * @param depth depth in the call stack (0 means current method, 1 means call method, ...)
-	 * @return method name
-	 */
-	public static String getMethodName(final int depth) {
-		final StackTraceElement[] ste = new Throwable().getStackTrace();
-		//System. out.println(ste[ste.length-depth].getClassName()+"#"+ste[ste.length-depth].getMethodName());
-		return ste[depth+1].getMethodName();
-	}
-
 
 	/**
 	 * Allows to change the state of an immutable instance. Huh?!?
 	 */
-	public static void setFieldValue(Class<?> clazz,  String fieldName, Object newValue) throws Exception {
+	public static void setFinalFieldValue(Class<?> clazz,  String fieldName, Object newValue) throws Exception {
 		Field nameField = getField(clazz, fieldName);
-		setValue(clazz, nameField, newValue);
+		setFieldValue_Internal(clazz, nameField, newValue);
 	}
 
-	/**
-	 * Allows to change the state of final statics. Huh?!?
-	 */
-	public static void setDefault(Class<?> clazz, String fieldName, Object newValue) throws Exception {
-		Field staticField = clazz.getDeclaredField(fieldName);
-		setValue(null, staticField, newValue);
-	}
-
-	/**
-	 * 
-	 * Set the value of a field reflectively.
-	 */
-	protected static void setValue(Object owner, Field field, Object value) throws Exception {
-		makeModifiable(field);
-		field.set(owner, value);
-	}
-
-	/**
-	 * Force the field to be modifiable and accessible.
-	 */
-	protected static void makeModifiable(Field nameField) throws Exception {
-		nameField.setAccessible(true);
-		int modifiers = nameField.getModifiers();
-		Field modifierField = nameField.getClass().getDeclaredField("modifiers");
-		modifiers = modifiers & ~Modifier.FINAL;
-		modifierField.setAccessible(true);
-		modifierField.setInt(nameField, modifiers);
-	}
-
+	@Deprecated
 	public static void setFinalStatic(Field field, Object newValue) throws Exception {
 		field.setAccessible(true);
 		Field modifiersField = Field.class.getDeclaredField("modifiers");
@@ -170,7 +197,7 @@ public class ReflectionUtils {
 
 	public static boolean invoke(Object objectInstance, String methodName, Class[] parameters, Object[] values){
 		if (objectInstance == null || methodName == null || parameters == null || values == null){
-			//Logger.WARNING("Null value when trying to Dynamically invoke "+methodName+" on an object of type: "+objectInstance.getClass().getName());
+			//AcLog.WARNING("Null value when trying to Dynamically invoke "+methodName+" on an object of type: "+objectInstance.getClass().getName());
 			return false;
 		}		
 		Class<?> mLocalClass = (objectInstance instanceof Class ? (Class<?>) objectInstance : objectInstance.getClass());
@@ -249,155 +276,47 @@ public class ReflectionUtils {
 		return null;
 	}
 
-	/*
-	 * @ if (isPresent("com.optionaldependency.DependencyClass")) { // This
-	 * block will never execute when the dependency is not present // There is
-	 * therefore no more risk of code throwing NoClassDefFoundException.
-	 * executeCodeLinkingToDependency(); }
-	 */
-	public static boolean isPresent(final String className) {
-		try {
-			Class.forName(className);
-			return true;
-		} catch (final Throwable ex) {
-			// Class or one of its dependencies is not present...
-			return false;
-		}
-	}
 
-	@SuppressWarnings("rawtypes")
-	@Deprecated
-	public static Method getMethodViaReflection(final Class<?> lookupClass, final String methodName,
-			final boolean invoke) throws Exception {
-		final Class<? extends Class> lookup = lookupClass.getClass();
-		final Method m = lookup.getDeclaredMethod(methodName);
-		m.setAccessible(true);// Abracadabra
-		if (invoke) {
-			m.invoke(lookup);// now its OK
-		}
-		return m;
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+	
+
+	/**
+	 * 
+	 * Set the value of a field reflectively.
+	 */
+	private static void setFieldValue_Internal(Object owner, Field field, Object value) throws Exception {
+		makeModifiable(field);
+		field.set(owner, value);
 	}
 
 	/**
-	 * Removes final modifier & returns a {@link Method} object.
-	 * @param aClass - Class containing the Method.
-	 * @param aMethodName - Method's name in {@link String} form.
-	 * @param aTypes - Varags Class Types for {@link Method}'s constructor.
-	 * @return - Valid, non-final, {@link Method} object.
+	 * Force the field to be modifiable and accessible.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Method getMethod(Class aClass, String aMethodName, Class... aTypes) {
-		Method m = null;
-		try {
-			m = aClass.getDeclaredMethod(aMethodName, aTypes);	
-			if (m != null) {
-				m.setAccessible(true);
-				int modifiers = m.getModifiers();
-				Field modifierField = m.getClass().getDeclaredField("modifiers");
-				modifiers = modifiers & ~Modifier.FINAL;
-				modifierField.setAccessible(true);
-				modifierField.setInt(m, modifiers);
-			}
-		}
-		catch (Throwable t) {
-		}
-		return m;
-	}
-	
-	public static Method getMethodRecursively(final Class<?> clazz, final String fieldName) throws NoSuchMethodException {
-		try {
-			Method k = clazz.getDeclaredMethod(fieldName);
-			makeMethodAccessible(k);
-			return k;
-		} catch (final NoSuchMethodException e) {
-			final Class<?> superClass = clazz.getSuperclass();
-			if (superClass == null) {
-				throw e;
-			}
-			return getMethod(superClass, fieldName);
-		}
-	}
-
-	public static void makeMethodAccessible(final Method field) {
-		if (!Modifier.isPublic(field.getModifiers()) ||
-				!Modifier.isPublic(field.getDeclaringClass().getModifiers()))
-		{
-			field.setAccessible(true);
-		}
-	}
-	
-	
-
-	public static Class<?> getNonPublicClass(final String className) {
-		Class<?> c = null;
-		try {
-			c = Class.forName(className);
-		} catch (final ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// full package name --------^^^^^^^^^^
-		// or simpler without Class.forName:
-		// Class<package1.A> c = package1.A.class;
-
-		if (null != c) {
-			// In our case we need to use
-			Constructor<?> constructor = null;
-			try {
-				constructor = c.getDeclaredConstructor();
-			} catch (NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// note: getConstructor() can return only public constructors
-			// so we needed to search for any Declared constructor
-
-			// now we need to make this constructor accessible
-			if (null != constructor) {
-				constructor.setAccessible(true);// ABRACADABRA!
-
-				try {
-					final Object o = constructor.newInstance();
-					return (Class<?>) o;
-				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		return null;
-	}
-
-	public static Class<?> getClassByName(String string) {
-		if (ReflectionUtils.doesClassExist(string)) {
-			try {
-				return Class.forName(string);
-			}
-			catch (ClassNotFoundException e) {
-				return getNonPublicClass(string);
-			}
-		}
-		return null;
-	}
-
-	public static boolean dynamicallyLoadClassesInPackage(String aPackageName) {
-		ClassLoader classLoader = CORE.class.getClassLoader();
-		int loaded = 0;
-		try {
-			ClassPath path = ClassPath.from(classLoader);
-			for (ClassPath.ClassInfo info : path.getTopLevelClassesRecursive(aPackageName)) {
-				Class<?> clazz = Class.forName(info.getName(), true, classLoader);
-				if (clazz != null) {
-					loaded++;
-					AcLog.INFO("Found "+clazz.getCanonicalName()+". ["+loaded+"]");
-				}
-			}
-		} catch (ClassNotFoundException | IOException e) {
-
-		}
-
-		return loaded > 0;
+	private static void makeModifiable(Field nameField) throws Exception {
+		nameField.setAccessible(true);
+		int modifiers = nameField.getModifiers();
+		Field modifierField = nameField.getClass().getDeclaredField("modifiers");
+		modifiers = modifiers & ~Modifier.FINAL;
+		modifierField.setAccessible(true);
+		modifierField.setInt(nameField, modifiers);
 	}
 
 
