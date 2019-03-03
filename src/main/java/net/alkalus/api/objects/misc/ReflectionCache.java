@@ -8,65 +8,103 @@ import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.ArrayUtils;
-
+import net.alkalus.core.util.data.ArrayUtils;
 import net.alkalus.core.util.data.StringUtils;
 import net.alkalus.core.util.reflect.ReflectionUtils;
 
 
-public class ReflectionCache {
+public class ReflectionCache implements Cloneable {
 
-	public Map<String, Class> mCachedClasses = new LinkedHashMap<String, Class>();
-	public Map<String, CachedMethod> mCachedMethods = new LinkedHashMap<String, CachedMethod>();
-	public Map<String, CachedField> mCachedFields = new LinkedHashMap<String, CachedField>();
+	public final Map<String, CachedClass> mCachedClasses;
+	public final Map<String, CachedMethod> mCachedMethods;
+	public final Map<String, CachedField> mCachedFields;
 
-	private class CachedMethod {
+	public ReflectionCache() {
+		mCachedClasses = new LinkedHashMap<String, CachedClass>();
+		mCachedMethods = new LinkedHashMap<String, CachedMethod>();
+		mCachedFields = new LinkedHashMap<String, CachedField>();
+	}
+	
+	public ReflectionCache(Map<String, CachedClass> aCachedClasses, Map<String, CachedMethod> aCachedMethods, Map<String, CachedField> aCachedFields) {
+		mCachedClasses = ArrayUtils.cloneMap(aCachedClasses);
+		mCachedMethods = ArrayUtils.cloneMap(aCachedMethods);
+		mCachedFields = ArrayUtils.cloneMap(aCachedFields);
+	}
+
+	@Override
+	public ReflectionCache clone()  {
+		return new ReflectionCache(mCachedClasses, mCachedMethods, mCachedFields);
+	}
+
+	private class CachedReflectiveObject<V> {
 
 		private final boolean STATIC;
-		private final Method METHOD;
+		private final V OBJECT;
 
-		public CachedMethod(Method aMethod, boolean isStatic) {
-			METHOD = aMethod;
+		public CachedReflectiveObject(V aObject, boolean isStatic) {
+			OBJECT = aObject;
 			STATIC = isStatic;
 		}
 
-		public Method get() {
-			return METHOD;
+		public V get() {
+			return OBJECT;
 		}
 
-		public boolean type() {
+		public boolean isStatic() {
 			return STATIC;
 		}
 
 	}
+	
+	public class CachedClass extends CachedReflectiveObject {
 
-	private class CachedField {
-
-		private final boolean STATIC;
-		private final Field FIELD;
-
-		public CachedField(Field aField, boolean isStatic) {
-			FIELD = aField;
-			STATIC = isStatic;
+		private final boolean SYNTHETIC;
+		private final boolean INNER_CLASS;
+		private final boolean ANONYMOUS;
+		
+		public CachedClass(Class aClass, boolean isStatic) {
+			super(aClass, isStatic);			
+			SYNTHETIC = aClass.isSynthetic();
+			INNER_CLASS = aClass.isMemberClass();
+			ANONYMOUS = aClass.isAnonymousClass();
+		}
+		
+		public boolean isSynthetic() {
+			return SYNTHETIC;
+		}
+		
+		public boolean isInnerClass() {
+			return INNER_CLASS;
+		}
+		
+		public boolean isAnonymousClass() {
+			return ANONYMOUS;
+		}
+		
+		
+	}
+	
+	public class CachedMethod extends CachedReflectiveObject {
+		public CachedMethod(Method aMethod, boolean isStatic) {
+			super(aMethod, isStatic);
 		}
 
-		public Field get() {
-			return FIELD;
+	}
+	
+	public class CachedField extends CachedReflectiveObject {
+		public CachedField(Field aMethod, boolean isStatic) {
+			super(aMethod, isStatic);
 		}
-
-		public boolean type() {
-			return STATIC;
-		}
-
 	}
 
 	private boolean cacheClass(Class aClass) {		
 		if (aClass == null) {
 			return false;
 		}		
-		Class y = mCachedClasses.get(aClass.getCanonicalName());
+		CachedClass y = mCachedClasses.get(aClass.getCanonicalName());
 		if (y == null) {
-			mCachedClasses.put(aClass.getCanonicalName(), aClass);
+			boolean aStatic = Modifier.isStatic(aClass.getModifiers());
+			mCachedClasses.put(aClass.getCanonicalName(), new CachedClass(aClass, aStatic));
 			return true;
 		}		
 		return false;
@@ -105,15 +143,19 @@ public class ReflectionCache {
 	 * @return - Valid, {@link Class} object, or {@link null}.
 	 */
 	public Class getClass(String aClassCanonicalName) {
-		Class y = mCachedClasses.get(aClassCanonicalName);
+		CachedClass y = mCachedClasses.get(aClassCanonicalName);
+		Class z;
 		if (y == null) {
-			y = getClass_Internal(aClassCanonicalName);
-			if (y != null) {
+			z = getClass_Internal(aClassCanonicalName);
+			if (z != null) {
 				AcLog.WARNING("Caching Class: "+aClassCanonicalName);
-				cacheClass(y);
+				cacheClass(z);
 			}
 		}
-		return y;
+		else {
+			z = (Class) y.get();
+		}
+		return z;
 	}
 
 
@@ -151,7 +193,7 @@ public class ReflectionCache {
 				return null;
 			}
 		} else {
-			return y.get();
+			return (Method) y.get();
 		}
 	}
 
@@ -179,7 +221,7 @@ public class ReflectionCache {
 			return null;
 
 		} else {
-			return y.get();
+			return (Field) y.get();
 		}
 	}
 	
@@ -191,10 +233,17 @@ public class ReflectionCache {
 	 */
 	public <T> T getField(final Object aInstance, final String aFieldName) {
 		try {
-			return (T) getField(aInstance.getClass(), aFieldName).get(aInstance);
+			Object oo = getField(aInstance.getClass(), aFieldName).get(aInstance);
+			if (oo != null) {
+				@SuppressWarnings("unchecked")
+				T op = (T) oo;
+				if (op != null) {
+					return op;
+				}
+			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
-			return null;
 		}
+		return null;
 	}
 	
 	
@@ -239,19 +288,7 @@ public class ReflectionCache {
 		}
 	}
 
-	@Deprecated
-	public Method getMethodViaReflection(final Class<?> lookupClass, final String methodName,
-			final boolean invoke) throws Exception {
-		final Class<? extends Class> lookup = lookupClass.getClass();
-		final Method m = lookup.getDeclaredMethod(methodName);
-		m.setAccessible(true);// Abracadabra
-		if (invoke) {
-			m.invoke(lookup);// now its OK
-		}
-		return m;
-	}
-
-	private Method getMethod_Internal(Class aClass, String aMethodName, Class... aTypes) {
+	private Method getMethod_Internal(Class<?> aClass, String aMethodName, Class... aTypes) {
 		Method m = null;
 		try {
 			AcLog.WARNING("Method: Internal Lookup: "+aMethodName);
@@ -316,23 +353,13 @@ public class ReflectionCache {
 
 	private Class<?> getNonPublicClass(final String className) {
 		Class<?> c = null;
-		try {
-			c = Class.forName(className);
-		} catch (final ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// full package name --------^^^^^^^^^^
-		// or simpler without Class.forName:
-		// Class<package1.A> c = package1.A.class;
-
-		if (null != c) {
+		c = getClass(className);
+		if (c != null) {
 			// In our case we need to use
 			Constructor<?> constructor = null;
 			try {
 				constructor = c.getDeclaredConstructor();
 			} catch (NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// note: getConstructor() can return only public constructors
@@ -344,10 +371,11 @@ public class ReflectionCache {
 
 				try {
 					final Object o = constructor.newInstance();
-					return (Class<?>) o;
+					if (o != null) {
+						return (Class<?>) o;
+					}
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 						| InvocationTargetException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

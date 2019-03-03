@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -114,6 +113,25 @@ public class ArrayUtils {
 	        sortedMap.put(entry.getKey(), entry.getValue());
 	    }
 	    return sortedMap;
+	}
+	
+	/**
+	 * Clones a Map, does not ensure that the objects within the map are cloneable.
+	 * @param <A> - Map Key Type
+	 * @param <B> - Map Data Type
+	 * @param aMap - The Map to clone, try to avoid using maps containing unique objects.
+	 */
+	public static <A, B> Map<A, B> cloneMap(Map<A, B> aMap) {
+		Set<Entry<A, B>> aKeys = aMap.entrySet();		
+		LinkedHashMap<A, B> aNewMap = new LinkedHashMap<A, B>();
+		for (Entry<A, B> data : aKeys) {
+			aNewMap.put(data.getKey(), data.getValue());
+		}
+		return aNewMap;		
+	}
+	
+	public static String toString(Object[] array) {
+		return org.apache.commons.lang3.ArrayUtils.toString(array);
 	}
 
 }
