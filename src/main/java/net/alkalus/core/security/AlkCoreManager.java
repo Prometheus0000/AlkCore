@@ -9,255 +9,256 @@ import net.alkalus.core.util.reflect.ReflectionUtils;
 
 /**
  * A very lenient {@link SecurityManager}.
+ * 
  * @author Alkalus
  *
  */
 public class AlkCoreManager extends SecurityManager {
 
-	private String mVersion = "v0.0.1a";
-	
-	public AlkCoreManager() {
+    private final String mVersion = "v0.0.1a";
 
+    public AlkCoreManager() {
 
-        synchronized(AlkCoreManager.class) {
-            SecurityManager sm = System.getSecurityManager();
+        synchronized (AlkCoreManager.class) {
+            final SecurityManager sm = System.getSecurityManager();
             if (sm != null) {
                 // ask the currently installed security manager if we
                 // can create a new one.
-                sm.checkPermission(new RuntimePermission("createSecurityManager"));
-                AcLog.ERROR("Security Manager already set. "+sm.getClass().getCanonicalName());
-            }
-            else {
+                sm.checkPermission(
+                        new RuntimePermission("createSecurityManager"));
+                AcLog.ERROR("Security Manager already set. "
+                        + sm.getClass().getCanonicalName());
+            } else {
                 try {
-    				ReflectionUtils.setField(SecurityManager.class, "initialized", true);
+                    ReflectionUtils.setField(SecurityManager.class,
+                            "initialized", true);
                     System.setSecurityManager(this);
-    			} catch (Exception e) {
-    				//Bad, do not set
-    			}
+                } catch (final Exception e) {
+                    // Bad, do not set
+                }
             }
         }
-		
-	}
-	
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public boolean getInCheck() {
-		return super.getInCheck();
-	}
 
-	@Override
-	protected Class[] getClassContext() {
-		return super.getClassContext();
-	}
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected ClassLoader currentClassLoader() {
-		return super.currentClassLoader();
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean getInCheck() {
+        return super.getInCheck();
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected Class<?> currentLoadedClass() {
-		return super.currentLoadedClass();
-	}
+    @Override
+    protected Class[] getClassContext() {
+        return super.getClassContext();
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected int classDepth(String name) {
-		return super.classDepth(name);
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected ClassLoader currentClassLoader() {
+        return super.currentClassLoader();
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected int classLoaderDepth() {
-		return super.classLoaderDepth();
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected Class<?> currentLoadedClass() {
+        return super.currentLoadedClass();
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected boolean inClass(String name) {
-		return super.inClass(name);
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected int classDepth(final String name) {
+        return super.classDepth(name);
+    }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected boolean inClassLoader() {
-		return super.inClassLoader();
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected int classLoaderDepth() {
+        return super.classLoaderDepth();
+    }
 
-	@Override
-	public Object getSecurityContext() {
-		return super.getSecurityContext();
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected boolean inClass(final String name) {
+        return super.inClass(name);
+    }
 
-	@Override
-	public void checkPermission(Permission perm) {
-		//super.checkPermission(perm);
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    protected boolean inClassLoader() {
+        return super.inClassLoader();
+    }
 
-	@Override
-	public void checkPermission(Permission perm, Object context) {
-		//super.checkPermission(perm, context);
-	}
+    @Override
+    public Object getSecurityContext() {
+        return super.getSecurityContext();
+    }
 
-	@Override
-	public void checkCreateClassLoader() {
-		//super.checkCreateClassLoader();
-	}
+    @Override
+    public void checkPermission(final Permission perm) {
+        // super.checkPermission(perm);
+    }
 
-	@Override
-	public void checkAccess(Thread t) {
-		//super.checkAccess(t);
-	}
+    @Override
+    public void checkPermission(final Permission perm, final Object context) {
+        // super.checkPermission(perm, context);
+    }
 
-	@Override
-	public void checkAccess(ThreadGroup g) {
-		//super.checkAccess(g);
-	}
+    @Override
+    public void checkCreateClassLoader() {
+        // super.checkCreateClassLoader();
+    }
 
-	@Override
-	public void checkExit(int status) {
-		//super.checkExit(status);
-	}
+    @Override
+    public void checkAccess(final Thread t) {
+        // super.checkAccess(t);
+    }
 
-	@Override
-	public void checkExec(String cmd) {
-		//super.checkExec(cmd);
-	}
+    @Override
+    public void checkAccess(final ThreadGroup g) {
+        // super.checkAccess(g);
+    }
 
-	@Override
-	public void checkLink(String lib) {
-		//super.checkLink(lib);
-	}
+    @Override
+    public void checkExit(final int status) {
+        // super.checkExit(status);
+    }
 
-	@Override
-	public void checkRead(FileDescriptor fd) {
-		//super.checkRead(fd);
-	}
+    @Override
+    public void checkExec(final String cmd) {
+        // super.checkExec(cmd);
+    }
 
-	@Override
-	public void checkRead(String file) {
-		//super.checkRead(file);
-	}
+    @Override
+    public void checkLink(final String lib) {
+        // super.checkLink(lib);
+    }
 
-	@Override
-	public void checkRead(String file, Object context) {
-		//super.checkRead(file, context);
-	}
+    @Override
+    public void checkRead(final FileDescriptor fd) {
+        // super.checkRead(fd);
+    }
 
-	@Override
-	public void checkWrite(FileDescriptor fd) {
-		//super.checkWrite(fd);
-	}
+    @Override
+    public void checkRead(final String file) {
+        // super.checkRead(file);
+    }
 
-	@Override
-	public void checkWrite(String file) {
-		//super.checkWrite(file);
-	}
+    @Override
+    public void checkRead(final String file, final Object context) {
+        // super.checkRead(file, context);
+    }
 
-	@Override
-	public void checkDelete(String file) {
-		//super.checkDelete(file);
-	}
+    @Override
+    public void checkWrite(final FileDescriptor fd) {
+        // super.checkWrite(fd);
+    }
 
-	@Override
-	public void checkConnect(String host, int port) {
-		//super.checkConnect(host, port);
-	}
+    @Override
+    public void checkWrite(final String file) {
+        // super.checkWrite(file);
+    }
 
-	@Override
-	public void checkConnect(String host, int port, Object context) {
-		//super.checkConnect(host, port, context);
-	}
+    @Override
+    public void checkDelete(final String file) {
+        // super.checkDelete(file);
+    }
 
-	@Override
-	public void checkListen(int port) {
-		//super.checkListen(port);
-	}
+    @Override
+    public void checkConnect(final String host, final int port) {
+        // super.checkConnect(host, port);
+    }
 
-	@Override
-	public void checkAccept(String host, int port) {
-		//super.checkAccept(host, port);
-	}
+    @Override
+    public void checkConnect(final String host, final int port, final Object context) {
+        // super.checkConnect(host, port, context);
+    }
 
-	@Override
-	public void checkMulticast(InetAddress maddr) {
-		//super.checkMulticast(maddr);
-	}
+    @Override
+    public void checkListen(final int port) {
+        // super.checkListen(port);
+    }
 
-	@Override
-	public void checkMulticast(InetAddress maddr, byte ttl) {
-		//super.checkMulticast(maddr, ttl);
-	}
+    @Override
+    public void checkAccept(final String host, final int port) {
+        // super.checkAccept(host, port);
+    }
 
-	@Override
-	public void checkPropertiesAccess() {
-		//super.checkPropertiesAccess();
-	}
+    @Override
+    public void checkMulticast(final InetAddress maddr) {
+        // super.checkMulticast(maddr);
+    }
 
-	@Override
-	public void checkPropertyAccess(String key) {
-		//super.checkPropertyAccess(key);
-	}
+    @Override
+    public void checkMulticast(final InetAddress maddr, final byte ttl) {
+        // super.checkMulticast(maddr, ttl);
+    }
 
-	@Override
-	public boolean checkTopLevelWindow(Object window) {
-		return true;
-	}
+    @Override
+    public void checkPropertiesAccess() {
+        // super.checkPropertiesAccess();
+    }
 
-	@Override
-	public void checkPrintJobAccess() {
-		//super.checkPrintJobAccess();
-	}
+    @Override
+    public void checkPropertyAccess(final String key) {
+        // super.checkPropertyAccess(key);
+    }
 
-	@Override
-	public void checkSystemClipboardAccess() {
-		//super.checkSystemClipboardAccess();
-	}
+    @Override
+    public boolean checkTopLevelWindow(final Object window) {
+        return true;
+    }
 
-	@Override
-	public void checkAwtEventQueueAccess() {
-		//super.checkAwtEventQueueAccess();
-	}
+    @Override
+    public void checkPrintJobAccess() {
+        // super.checkPrintJobAccess();
+    }
 
-	@Override
-	public void checkPackageAccess(String pkg) {
-		//super.checkPackageAccess(pkg);
-	}
+    @Override
+    public void checkSystemClipboardAccess() {
+        // super.checkSystemClipboardAccess();
+    }
 
-	@Override
-	public void checkPackageDefinition(String pkg) {
-		//super.checkPackageDefinition(pkg);
-	}
+    @Override
+    public void checkAwtEventQueueAccess() {
+        // super.checkAwtEventQueueAccess();
+    }
 
-	@Override
-	public void checkSetFactory() {
-		//super.checkSetFactory();
-	}
+    @Override
+    public void checkPackageAccess(final String pkg) {
+        // super.checkPackageAccess(pkg);
+    }
 
-	@Override
-	public void checkMemberAccess(Class<?> clazz, int which) {
-		//super.checkMemberAccess(clazz, which);
-	}
+    @Override
+    public void checkPackageDefinition(final String pkg) {
+        // super.checkPackageDefinition(pkg);
+    }
 
-	@Override
-	public void checkSecurityAccess(String target) {
-		//super.checkSecurityAccess(target);
-	}
+    @Override
+    public void checkSetFactory() {
+        // super.checkSetFactory();
+    }
 
-	@Override
-	public ThreadGroup getThreadGroup() {
-		return super.getThreadGroup();
-	}
+    @Override
+    public void checkMemberAccess(final Class<?> clazz, final int which) {
+        // super.checkMemberAccess(clazz, which);
+    }
 
-	/**
-	 * Returns the version string.
-	 */
-	@Override
-	public String toString() {
-		return mVersion;
-	}
+    @Override
+    public void checkSecurityAccess(final String target) {
+        // super.checkSecurityAccess(target);
+    }
+
+    @Override
+    public ThreadGroup getThreadGroup() {
+        return super.getThreadGroup();
+    }
+
+    /**
+     * Returns the version string.
+     */
+    @Override
+    public String toString() {
+        return mVersion;
+    }
 
 }
