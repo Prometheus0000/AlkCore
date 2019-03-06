@@ -132,4 +132,33 @@ public class StringUtils {
             return aData;
         }
     }
+
+    public static String sanitizeString(final String input) {
+        String temp = input.replace(" ", "");
+        temp = temp.replace("(", "");
+        temp = temp.replace(")", "");
+        temp = temp.replace("{", "");
+        temp = temp.replace("}", "");
+        temp = temp.replace("[", "");
+        temp = temp.replace("]", "");
+        return sanitizeStringKeepBrackets(temp);
+    
+    }
+
+    public static String sanitizeStringKeepBrackets(final String input) {
+        String temp;
+        String output;
+    
+        temp = input.replace(" ", "");
+        temp = temp.replace("-", "");
+        temp = temp.replace("_", "");
+        temp = temp.replace("?", "");
+        temp = temp.replace("!", "");
+        temp = temp.replace("@", "");
+        temp = temp.replace("#", "");
+        temp = temp.replace(" ", "");
+        output = temp;
+        return output;
+    
+    }
 }

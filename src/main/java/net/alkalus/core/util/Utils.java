@@ -20,6 +20,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import net.alkalus.api.objects.data.AutoMap;
 import net.alkalus.api.objects.misc.AcLog;
+import net.alkalus.core.util.data.StringUtils;
 import net.alkalus.core.util.math.MathUtils;
 import net.alkalus.core.util.sys.SystemUtils;
 
@@ -287,44 +288,18 @@ public class Utils {
 
     }
 
+    /**
+     * @deprecated Use {@link StringUtils#sanitizeString(String)} instead
+     */
     public static String sanitizeString(final String input) {
-        String temp;
-        String output;
-
-        temp = input.replace(" ", "");
-        temp = temp.replace("-", "");
-        temp = temp.replace("_", "");
-        temp = temp.replace("?", "");
-        temp = temp.replace("!", "");
-        temp = temp.replace("@", "");
-        temp = temp.replace("#", "");
-        temp = temp.replace("(", "");
-        temp = temp.replace(")", "");
-        temp = temp.replace("{", "");
-        temp = temp.replace("}", "");
-        temp = temp.replace("[", "");
-        temp = temp.replace("]", "");
-        temp = temp.replace(" ", "");
-        output = temp;
-        return output;
-
+        return StringUtils.sanitizeString(input);
     }
 
+    /**
+     * @deprecated Use {@link StringUtils#sanitizeStringKeepBrackets(String)} instead
+     */
     public static String sanitizeStringKeepBrackets(final String input) {
-        String temp;
-        String output;
-
-        temp = input.replace(" ", "");
-        temp = temp.replace("-", "");
-        temp = temp.replace("_", "");
-        temp = temp.replace("?", "");
-        temp = temp.replace("!", "");
-        temp = temp.replace("@", "");
-        temp = temp.replace("#", "");
-        temp = temp.replace(" ", "");
-        output = temp;
-        return output;
-
+        return StringUtils.sanitizeStringKeepBrackets(input);
     }
 
     public static String[] parseVersion(final String version) {
