@@ -1,10 +1,13 @@
 package net.alkalus.core.locale;
 
 import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 
 import net.alkalus.api.objects.data.AutoMap;
 import net.alkalus.api.objects.misc.AcLog;
+import net.alkalus.core.lib.CORE;
 import net.alkalus.core.util.data.FileUtils;
 
 public class LocaleCache {
@@ -81,15 +84,60 @@ public class LocaleCache {
      * @param aDelimiter - Custom delimiter for splitting locale data
      */
     public LocaleCache(final String aLocale, final char aDelimiter) {
-        mLocale = aLocale;
         DELIMITER = aDelimiter;
+        
+        
+        boolean aInternalSearchMethod = false;
+        ClassLoader classLoader = getClass().getClassLoader();
+        
+        //Determine Fallback Behaviour
+        boolean didFindDesignatedLocale = false;
+        
+        
         for (final String g : INTERNAL_LOCALE_NAME_CACHE) {
-            File file;
+            File file = null;
+            String aFileString = "/locale/" + g + ".lang";
             try {
-                file = new File(LocaleCache.class
-                        .getResource("/locale/" + g + ".lang").getFile());
+                
+                InputStream in = getClass().getResourceAsStream(aFileString);                 
+                if (in != null) {
+                    //log("Using InputStream Lookup for "+aFileString);
+                    File aTempFile = new File(FileUtils.getTempStorage(), CORE.NAME+"_"+CORE.VERSION+"_"+g + ".lang");
+                    file = FileUtils.convertFileInputStream(in, aTempFile);
+                    if (file != null && file.exists()) {
+                        //log("Found, Processing.");
+                        aInternalSearchMethod = false;
+                    } 
+                }
+                else {
+                    //log("Using internal locale lookup");
+                    if (classLoader != null) {
+                        URL aFileURL = classLoader.getResource(aFileString);
+                        if (aFileURL != null) {
+                            //log("Found resource object");
+                            file = new File(aFileURL.getFile()); 
+                            if (file != null && file.exists()) {
+                                //log("Found, Processing.");
+                                aInternalSearchMethod = true;
+                            }                           
+                        }                       
+                    }
+                 }
+                
             } catch (final Throwable t) {
+                t.printStackTrace();
+                //log("Failed to create '"+aFileString+"' | Exception");
                 continue;
+            }
+            if (file == null || !file.exists()) {
+                //log("Failed to create '"+aFileString+"'");
+                continue;
+            }
+            else {
+                if (g.equals(aLocale)) {
+                    didFindDesignatedLocale = true;
+                }
+                log("Found: "+file.getAbsolutePath() + " | "+aInternalSearchMethod);
             }
             if (file != null && file.exists() && !file.isDirectory()) {
                 INTERNAL_LOCALE_FILE_CACHE.put(g, file);
@@ -101,9 +149,20 @@ public class LocaleCache {
         } else {
             log("Could not find default locale file " + mLocale);
             VALID = false;
+        }        
+
+        if (didFindDesignatedLocale) {
+            mLocale = aLocale;            
         }
+        else {
+            mLocale = "en_US"; //Fallback Behaviour            
+        }        
+        
         if (VALID) {
             populate();
+        }
+        else {
+            log("Could not populate LocaleCache. Please verify there are valid .lang files to load.");
         }
     }
 
@@ -240,7 +299,12 @@ public class LocaleCache {
         return mCurrentlySelectedLocaleData;
     }
 
+
     public void dumpLocaleMappings() {
+        dumpLocaleMappings(AcLog.STATIC_INSTANCE);
+    }
+    
+    public void dumpLocaleMappings(AcLog aLogger) {
         for (final String g : mCurrentlySelectedLocaleData.keySet()) {
             if (g != null && g.length() >= 1) {
                 final String aBuilt = (g + " : "
@@ -249,6 +313,12 @@ public class LocaleCache {
             }
 
         }
+    }
+    
+    public static String getSystemDefaultLocale() {
+        String country = System.getProperty("user.country"); 
+        String lang = System.getProperty("user.language");
+        return lang+"_"+country;   
     }
 
 }

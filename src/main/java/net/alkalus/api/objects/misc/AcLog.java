@@ -13,12 +13,21 @@ public class AcLog {
         logger = makeLogger(aLoggerName, true);
     }
 
+    private AcLog(String aLoggerName, boolean b) {
+        logger = makeLogger(aLoggerName, b);
+    }
+
     // Static Logger used by core
-    private static final Logger modLogger = AcLog.makeLogger("AlkCore_API",
-            false);
+    public static final AcLog STATIC_INSTANCE;
+    private static final Logger modLogger;
+    
+    static {
+        STATIC_INSTANCE = new AcLog("AlkCore_API", false);
+        modLogger = STATIC_INSTANCE.getLogger();
+    }
 
     // Generate Logger
-    private static Logger makeLogger(final String aLoggerName, final boolean aChild) {
+    protected static Logger makeLogger(final String aLoggerName, final boolean aChild) {
         return LogManager.getLogger(aLoggerName);
     }
 
