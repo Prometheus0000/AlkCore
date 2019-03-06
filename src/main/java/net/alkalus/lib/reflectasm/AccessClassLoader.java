@@ -12,7 +12,7 @@
  *
  */
 
-package com.esotericsoftware.reflectasm;
+package net.alkalus.lib.reflectasm;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;

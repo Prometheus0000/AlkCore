@@ -12,7 +12,7 @@
  *
  */
 
-package com.esotericsoftware.reflectasm;
+package net.alkalus.lib.reflectasm;
 
 import static org.objectweb.asm.Opcodes.*;
 
